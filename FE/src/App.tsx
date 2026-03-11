@@ -1,12 +1,13 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
-import { Home } from './pages/Home';           
+import { Home } from './pages/Home';               
 import MatchList from './pages/MatchList';         
 import MatchRecord from './pages/MatchRecord';
 import PlayerStats from './pages/PlayerStats';
 import TeamStandings from './pages/TeamStandings'; 
 import Login from './pages/Login';                 
 import Signup from './pages/Signup'; 
+import Profile from './pages/Profile';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           <Route path="record/:id" element={<MatchRecord />} />   
           <Route path="login" element={<Login />} />              
           <Route path="signup" element={<Signup />} /> 
+          <Route path="profile" element={<Profile />} />
         </Route>
       </Routes>
     </BrowserRouter>

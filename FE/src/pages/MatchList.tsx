@@ -2,8 +2,9 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 export default function MatchList() {
-  // 임시 권한 및 데이터 (추후 Supabase 연동)
+  // 임시 권한 (추후 Supabase 연동 시 로그인 상태에 따라 달라짐)
   const isAdmin = true; 
+  
   const matches = [
     { id: '1', date: '2026-02-10', awayTeam: '22학번', homeTeam: '24학번', awayScore: 5, homeScore: 3, status: 'finished' },
     { id: '2', date: '2026-02-04', awayTeam: '23학번', homeTeam: '24학번', awayScore: 1, homeScore: 1, status: 'finished' },
@@ -41,16 +42,10 @@ export default function MatchList() {
               </td>
               <td className="py-4 font-bold text-lg">{match.homeTeam}</td>
               <td className="py-4">
-                <div className="flex justify-center gap-2">
-                  {/* 일반 회원은 기록 보기만 가능, 관리자는 수정 가능 */}
-                  <Link to={`/record/${match.id}`} className="px-3 py-1.5 bg-[#6c757d] text-white text-xs font-bold rounded hover:bg-[#5a6268]">
-                    상세 보기
+                <div className="flex justify-center">
+                  <Link to={`/record/${match.id}`} className="px-4 py-2 bg-[#104175] text-white text-xs font-bold rounded-lg hover:bg-[#081e36] transition-colors">
+                    기록 보기
                   </Link>
-                  {isAdmin && (
-                    <Link to={`/record/${match.id}/edit`} className="px-3 py-1.5 bg-[#104175] text-white text-xs font-bold rounded hover:bg-[#081e36]">
-                      수정
-                    </Link>
-                  )}
                 </div>
               </td>
             </tr>

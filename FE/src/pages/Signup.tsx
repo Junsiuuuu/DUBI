@@ -1,18 +1,47 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { supabase } from '../lib/supabase'; // ⭐ 방금 만든 다리를 가져옵니다!
 
 export default function Signup() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // 로딩 상태 추가
   const navigate = useNavigate();
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    // 나중에 Supabase 회원가입 연동
-    alert('회원가입 성공! 로그인 페이지로 이동합니다.');
-    navigate('/login');
+    setIsLoading(true);
+
+    try {
+      // 1. Supabase Auth에 회원가입 요청
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      // 2. profiles 테이블에 닉네임과 함께 저장
+      if (data.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            { id: data.user.id, email: email, role: 'user' } // 기본 권한은 'user'
+          ]);
+          
+        if (profileError) throw profileError;
+      }
+
+      alert('🎉 회원가입이 완료되었습니다! 로그인 페이지로 이동합니다.');
+      navigate('/login');
+      
+    } catch (error: any) {
+      alert(`회원가입 실패: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -49,7 +78,7 @@ export default function Signup() {
           </div>
           
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">비밀번호</label>
+            <label className="block text-sm font-bold text-gray-700 mb-2">비밀번호 (6자리 이상)</label>
             <div className="relative">
               <input 
                 type={showPassword ? "text" : "password"} 
@@ -71,9 +100,10 @@ export default function Signup() {
 
           <button 
             type="submit" 
-            className="w-full py-4 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition-all mt-4"
+            disabled={isLoading}
+            className="w-full py-4 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition-all mt-4 disabled:bg-gray-400"
           >
-            가입하기
+            {isLoading ? '가입 중...' : '가입하기'}
           </button>
         </form>
 
