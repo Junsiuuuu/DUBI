@@ -46,7 +46,7 @@ export default function Layout() {
       <header className="flex justify-between items-center px-12 py-5 bg-white border-b border-gray-100">
         <Link to="/" className="flex items-center gap-4 hover:opacity-80 transition-opacity">
           <div className="bg-black text-white px-3 py-1 rounded-full font-black text-xl tracking-tighter">DUBI</div>
-          <span className="text-gray-400 text-xs font-medium">대전대학야구인비테이셔널</span>
+          <span className="text-gray-400 text-xs font-medium">대전 대학 야구 인비테이셔널</span>
         </Link>
 
         <nav className="flex items-center gap-10 text-[15px] font-semibold text-gray-500">

@@ -3,23 +3,43 @@ import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 export default function TeamPage() {
-  const { id } = useParams<{ id: string }>(); // URL의 팀 ID
+  const { id } = useParams<{ id: string }>(); 
   const [teamName, setTeamName] = useState('로딩 중...');
   const [players, setPlayers] = useState<any[]>([]);
   const [matches, setMatches] = useState<any[]>([]);
-  const [newPlayerName, setNewPlayerName] = useState('');
   const [stats, setStats] = useState({ total: 0, win: 0, draw: 0, loss: 0, rate: '0.0' });
 
-  // 권한 관리를 위한 State
   const [userRole, setUserRole] = useState('user');
   const [userTeamId, setUserTeamId] = useState<string | null>(null);
+
+  const [newPlayerName, setNewPlayerName] = useState('');
+  const [userSearchResults, setUserSearchResults] = useState<any[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
     fetchTeamData();
     checkUserRole();
   }, [id]);
 
-  // 1. 유저의 권한(role)과 소속 팀(team_id)을 모두 가져옵니다.
+  useEffect(() => {
+    const searchUsers = async () => {
+      if (newPlayerName.trim().length < 1) {
+        setUserSearchResults([]);
+        return;
+      }
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, name, email')
+        .ilike('name', `%${newPlayerName}%`)
+        .limit(5);
+
+      if (data) setUserSearchResults(data);
+    };
+
+    const timerId = setTimeout(() => searchUsers(), 200);
+    return () => clearTimeout(timerId);
+  }, [newPlayerName]);
+
   const checkUserRole = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
@@ -31,7 +51,6 @@ export default function TeamPage() {
     }
   };
 
-  // 현재 페이지의 선수를 수정할 수 있는 권한인지 확인합니다.
   const canEditPlayers = 
     userRole === 'admin' || 
     userRole === 'umpire' || 
@@ -42,7 +61,11 @@ export default function TeamPage() {
     const { data: teamData } = await supabase.from('teams').select('name').eq('id', id).single();
     if (teamData) setTeamName(teamData.name);
 
-    const { data: playersData } = await supabase.from('players').select('*').eq('team_id', id).order('name');
+    const { data: playersData } = await supabase
+      .from('players')
+      .select('*, profiles(email)')
+      .eq('team_id', id)
+      .order('name');
     if (playersData) setPlayers(playersData);
 
     const { data: matchesData } = await supabase
@@ -71,10 +94,38 @@ export default function TeamPage() {
     setStats({ total, win, draw, loss, rate });
   };
 
-  const handleAddPlayer = async () => {
-    if (!newPlayerName.trim()) return alert("선수 이름을 입력하세요.");
-    const { error } = await supabase.from('players').insert([{ team_id: id, name: newPlayerName }]);
-    if (!error) { setNewPlayerName(''); fetchTeamData(); }
+  // ⭐ 선수 추가 시 투잡 방지 로직 추가
+  const submitPlayer = async (name: string, userId: string | null) => {
+    if (!name.trim()) return alert("선수 이름을 입력하세요.");
+    
+    // 만약 회원 계정을 연동하려고 한다면?
+    if (userId) {
+      // players 테이블을 뒤져서 이 계정이 이미 다른 팀에 등록되어 있는지 확인합니다.
+      const { data: existingPlayer } = await supabase
+        .from('players')
+        .select('team:teams(name)')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (existingPlayer) {
+        // @ts-ignore
+        const currentTeam = existingPlayer.team?.name || '다른 팀';
+        return alert(`추가 실패!\n해당 회원은 이미 [${currentTeam}]에 소속되어 있습니다.`);
+      }
+    }
+
+    const payload: any = { team_id: id, name: name.trim() };
+    if (userId) payload.user_id = userId;
+
+    const { error } = await supabase.from('players').insert([payload]);
+    
+    if (!error) { 
+      setNewPlayerName(''); 
+      setShowDropdown(false);
+      fetchTeamData(); 
+    } else {
+      alert("추가 중 오류가 발생했습니다.");
+    }
   };
 
   const handleDeletePlayer = async (playerId: string, playerName: string) => {
@@ -85,11 +136,10 @@ export default function TeamPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4">
-      {/* 통계 카드 부분은 화면이 길어져 생략 없이 그대로 둡니다 */}
+      {/* 타이틀 및 통계 카드 */}
       <div className="mb-10">
         <h2 className="text-3xl font-black text-[#104175] border-b-2 border-[#104175] pb-4 mb-6">{teamName}</h2>
         <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex justify-around text-center">
-          {/* ... 기존 통계 UI 동일 ... */}
           <div className="flex flex-col gap-2"><span className="text-sm font-bold text-gray-500">총 경기</span><span className="text-3xl font-black text-[#104175]">{stats.total}</span></div>
           <div className="flex flex-col gap-2"><span className="text-sm font-bold text-gray-500">승</span><span className="text-3xl font-black text-[#2d6d3c]">{stats.win}</span></div>
           <div className="flex flex-col gap-2"><span className="text-sm font-bold text-gray-500">무</span><span className="text-3xl font-black text-[#104175]">{stats.draw}</span></div>
@@ -98,23 +148,76 @@ export default function TeamPage() {
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-8 items-start">
-        <section className="w-full lg:w-[320px] bg-white p-6 rounded-2xl shadow-sm border border-gray-100 shrink-0">
+      <div className="flex flex-col lg:flex-row gap-8 items-start mb-20">
+        
+        {/* 선수 명단 영역 */}
+        <section className="w-full lg:w-[380px] bg-white p-6 rounded-2xl shadow-sm border border-gray-100 shrink-0">
           <h3 className="text-xl font-bold mb-6">👥 선수 명단</h3>
           
-          {/* ⭐ 권한이 있는 사람에게만 추가 폼 노출 */}
           {canEditPlayers && (
-            <div className="flex gap-2 mb-6">
-              <input type="text" value={newPlayerName} onChange={(e) => setNewPlayerName(e.target.value)} placeholder="선수 이름" className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#104175]" />
-              <button onClick={handleAddPlayer} className="px-4 py-2 bg-[#18361f] text-white font-bold rounded-lg hover:bg-green-900 transition-colors whitespace-nowrap">추가</button>
+            <div className="relative mb-6">
+              <div className="flex gap-2 relative z-20">
+                <input 
+                  type="text" 
+                  value={newPlayerName} 
+                  onChange={(e) => {
+                    setNewPlayerName(e.target.value);
+                    setShowDropdown(true);
+                  }}
+                  onFocus={() => setShowDropdown(true)}
+                  onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+                  placeholder="선수 검색 또는 직접 입력" 
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#104175] text-[15px]" 
+                />
+                <button 
+                  onClick={() => submitPlayer(newPlayerName, null)} 
+                  className="px-4 py-2 bg-[#18361f] text-white font-bold rounded-lg hover:bg-green-900 transition-colors whitespace-nowrap"
+                >
+                  추가
+                </button>
+              </div>
+
+              {showDropdown && newPlayerName.trim().length > 0 && (
+                <div className="absolute top-[42px] left-0 w-full bg-white border border-gray-200 shadow-xl rounded-lg mt-1 z-30 overflow-hidden">
+                  <div 
+                    className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 flex items-center justify-between transition-colors"
+                    onMouseDown={(e) => { e.preventDefault(); submitPlayer(newPlayerName, null); }}
+                  >
+                    <span className="font-bold text-gray-800">{newPlayerName}</span>
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded font-bold">일반 이름 등록</span>
+                  </div>
+
+                  {userSearchResults.map(user => (
+                    <div 
+                      key={user.id}
+                      className="px-4 py-3 hover:bg-[#f0f4f8] cursor-pointer border-b border-gray-100 last:border-0 flex flex-col gap-1 transition-colors"
+                      onMouseDown={(e) => { e.preventDefault(); submitPlayer(user.name || newPlayerName, user.id); }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-[#104175]">{user.name || '이름 미설정'}</span>
+                        <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded font-bold">🔗 회원 연결</span>
+                      </div>
+                      <span className="text-[13px] text-gray-400 font-medium">{user.email}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
+          {/* 명단 리스트 */}
           <ul className="space-y-0">
             {players.map(player => (
               <li key={player.id} className="flex justify-between items-center py-3 border-b border-gray-100 last:border-0">
-                <span className="font-bold text-gray-800">{player.name}</span>
-                {/* ⭐ 권한이 있는 사람에게만 삭제 버튼 노출 */}
+                <div className="flex items-center gap-2">
+                  <Link to={`/player/${player.id}`} className="font-bold text-gray-800 hover:text-[#104175] hover:underline transition-colors text-[15px]">
+                    {player.name}
+                  </Link>
+                  {player.user_id && (
+                    <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-black tracking-tighter" title="회원 연동됨">LINK</span>
+                  )}
+                </div>
+                
                 {canEditPlayers && (
                   <button onClick={() => handleDeletePlayer(player.id, player.name)} className="px-3 py-1 text-xs font-bold bg-[#dc3545] text-white rounded hover:bg-red-700 transition-colors">삭제</button>
                 )}
@@ -124,7 +227,7 @@ export default function TeamPage() {
           </ul>
         </section>
 
-        {/* ... 우측 경기 기록 섹션 동일 (생략 없이 원본 유지) ... */}
+        {/* 경기 기록 영역 */}
         <section className="flex-1 w-full bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <h3 className="text-xl font-bold mb-6">🏟️ 경기 기록</h3>
           <div className="overflow-x-auto">
@@ -135,7 +238,7 @@ export default function TeamPage() {
               <tbody className="text-[15px]">
                 {matches.map(match => {
                   const isAway = match.away_team_id === id;
-                  const opponent = isAway ? match.home_team.name : match.away_team.name;
+                  const opponent = isAway ? match.home_team?.name : match.away_team?.name;
                   const myScore = isAway ? match.away_score : match.home_score;
                   const opScore = isAway ? match.home_score : match.away_score;
                   let resultText = "미입력", resultColor = "text-gray-500";
@@ -153,6 +256,9 @@ export default function TeamPage() {
                     </tr>
                   );
                 })}
+                {matches.length === 0 && (
+                  <tr><td colSpan={4} className="py-8 text-gray-400 text-sm">진행된 경기가 없습니다.</td></tr>
+                )}
               </tbody>
             </table>
           </div>

@@ -11,6 +11,8 @@ import Profile from './pages/Profile';
 import ResetPassword from './pages/ResetPassword';   
 import UpdatePassword from './pages/UpdatePassword'; 
 import TeamPage from './pages/TeamPage';
+import PlayerPage from './pages/PlayerPage';
+import AdminPage from './pages/AdminPage';
 
 function App() {
   return (
@@ -28,6 +30,8 @@ function App() {
           <Route path="reset-password" element={<ResetPassword />} /> 
           <Route path="update-password" element={<UpdatePassword />} /> 
           <Route path="team/:id" element={<TeamPage />} />
+          <Route path="player/:id" element={<PlayerPage />} />
+          <Route path="admin" element={<AdminPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

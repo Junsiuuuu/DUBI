@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'; // React 임포트 경고 수정
+import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
@@ -108,7 +108,6 @@ function getContrastColor(hexcolor: string) {
   return (((r * 299) + (g * 587) + (b * 114)) / 1000 >= 128) ? '#000000' : '#ffffff';
 }
 
-// --- 타석 스탯 계산기 (any 타입 오류 수정) ---
 const calcBatStats = (outcomes: string[]) => {
   let pa = 0, ab = 0, hits = 0, ob = 0, steals = 0;
   outcomes.forEach(inningStr => {
@@ -131,15 +130,21 @@ const calcBatStats = (outcomes: string[]) => {
   return { pa, ab, hits, ob, steals };
 };
 
-// --- 기초 데이터 생성기 ---
 const generateInitialBatters = () => Array.from({ length: 9 }, (_, i) => ({
-  id: Date.now() + i, order: String(i + 1), name: '', position: '', outcomes: Array(9).fill(''), rbi: 0, runs: 0, isSubstitute: false
+  id: Date.now() + i, order: String(i + 1), name: '', position: '', outcomes: Array(9).fill(''), 
+  rbi: 0 as number | string, 
+  runs: 0 as number | string, 
+  isSubstitute: false
 }));
+
 const generateInitialPitchers = () => [{
-  id: Date.now(), order: 1, name: '', result: '', innings: '', pitchcount: '', ER: '', RA: '', K: '', Hits: '', HRA: '', BB: '', isSubstitute: false
+  id: Date.now(), order: 1, name: '', result: '', 
+  innings: 0 as number | string, pitchcount: 0 as number | string, ER: 0 as number | string, 
+  RA: 0 as number | string, K: 0 as number | string, Hits: 0 as number | string, 
+  HRA: 0 as number | string, BB: 0 as number | string, 
+  isSubstitute: false
 }];
 
-// --- 타석 결과 코드표 컴포넌트 ---
 const CodeMappingTable = ({ onCodeClick }: { onCodeClick: (code: string) => void }) => (
   <div className="bg-[#f0f2f5] p-2 border border-gray-200 rounded-lg mb-10 text-center">
     <h3 className="font-bold text-gray-700 mb-2 mt-1">
@@ -190,11 +195,9 @@ export default function MatchRecord() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [inningTab, setInningTab] = useState<'away' | 'home'>('away');
   
-  // 데이터 연동
   const [allTeams, setAllTeams] = useState<any[]>([]);
   const [allPlayers, setAllPlayers] = useState<any[]>([]);
   
-  // 상태 관리
   const [editingCell, setEditingCell] = useState<{ team: 'away'|'home', bIdx: number, inning: number } | null>(null);
   const [addOrderAway, setAddOrderAway] = useState('');
   const [addOrderHome, setAddOrderHome] = useState('');
@@ -213,6 +216,12 @@ export default function MatchRecord() {
 
   const inputStyle = isAdmin ? "border border-gray-300 p-1 rounded w-full text-center focus:border-[#104175] focus:outline-none" : "w-full text-center bg-transparent text-black font-medium appearance-none";
   const selectStyle = isAdmin ? "border border-gray-300 p-1 rounded w-full" : "w-full bg-transparent text-black font-medium appearance-none text-center";
+
+  const handleNumberKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === '-' || e.key === 'e') {
+      e.preventDefault();
+    }
+  };
 
   useEffect(() => {
     checkRoleAndFetch();
@@ -240,7 +249,6 @@ export default function MatchRecord() {
   const handleSave = async () => {
     if (!isAdmin) return;
 
-    // ⭐ 1. 필수 입력값(팀 선택) 확인 방어 코드
     if (!matchData.away_team_id || !matchData.home_team_id) {
       alert('초공 팀과 말공 팀을 모두 선택해주세요!');
       return;
@@ -271,21 +279,22 @@ export default function MatchRecord() {
     };
 
     try {
-      // ⭐ 2. 에러가 발생하면 화면에 띄워주도록 try-catch 추가
       if (id === 'new') {
-        const { error } = await supabase.from('matches').insert([saveData]);
+        // ⭐ 새 경기일 경우 생성 후 해당 경기의 고유 주소로 이동시킴 (목록으로 튕기지 않음)
+        const { data, error } = await supabase.from('matches').insert([saveData]).select('id').single();
         if (error) throw error;
+        alert('기록이 성공적으로 저장되었습니다!');
+        navigate(`/record/${data.id}`, { replace: true }); 
       } else {
+        // ⭐ 기존 경기일 경우 덮어쓰고 새로고침 (목록으로 튕기지 않음)
         const { error } = await supabase.from('matches').update(saveData).eq('id', id);
         if (error) throw error;
+        alert('기록이 성공적으로 저장되었습니다!');
+        window.location.reload(); 
       }
-      
-      alert('기록이 성공적으로 저장되었습니다!');
-      navigate('/matches');
-      
     } catch (error: any) {
       console.error(error);
-      alert(`저장 실패: ${error.message}`); // 어떤 에러인지 알림창으로 보여줌
+      alert(`저장 실패: ${error.message}`);
     }
   };
 
@@ -312,7 +321,7 @@ export default function MatchRecord() {
 
   const handleAddPitcher = (pitchTeam: 'away'|'home') => {
     const pitchers = [...matchData[`${pitchTeam}_pitchers`]];
-    pitchers.push({ id: Date.now(), order: pitchers.length + 1, name: '', result: '', innings: '', pitchcount: '', ER: '', RA: '', K: '', Hits: '', HRA: '', BB: '', isSubstitute: true });
+    pitchers.push({ id: Date.now(), order: pitchers.length + 1, name: '', result: '', innings: 0, pitchcount: 0, ER: 0, RA: 0, K: 0, Hits: 0, HRA: 0, BB: 0, isSubstitute: true });
     setMatchData({ ...matchData, [`${pitchTeam}_pitchers`]: pitchers });
   };
 
@@ -340,6 +349,15 @@ export default function MatchRecord() {
     }
     setMatchData({ ...matchData, [`${team}_batters`]: batters });
   };
+
+  // ⭐ 현재 선택된 팀 정보 추출
+  const awayTeamInfo = allTeams.find(t => t.id === matchData.away_team_id);
+  const homeTeamInfo = allTeams.find(t => t.id === matchData.home_team_id);
+
+  // ⭐ 상단 타이틀을 동적으로 표시하기 위한 로직
+  const displayTitle = (matchData.away_team_id && matchData.home_team_id) 
+    ? `${awayTeamInfo?.name || '알수없음'} vs ${homeTeamInfo?.name || '알수없음'}` 
+    : '새 경기 기록 (팀 선택)';
 
 
   const renderHalfInning = (batTeam: 'away'|'home', pitchTeam: 'away'|'home') => {
@@ -370,8 +388,8 @@ export default function MatchRecord() {
                 <th className="py-3 px-2 border-x border-gray-300 w-32">선수 이름</th>
                 <th className="py-3 px-2 border-x border-gray-300 w-24">수비위치</th>
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => <th key={i} className="py-3 px-2 border-x border-gray-300 w-16">{i}</th>)}
-                <th className="py-3 px-2 border-x border-gray-300 w-12 text-xs">타점</th>
-                <th className="py-3 px-2 border-x border-gray-300 w-12 text-xs">득점</th>
+                <th className="py-3 px-2 border-x border-gray-300 w-16 text-xs bg-gray-50">타점</th>
+                <th className="py-3 px-2 border-x border-gray-300 w-16 text-xs bg-gray-50">득점</th>
                 <th className="py-3 px-2 border-x border-gray-300 w-12 text-xs">타석</th>
                 <th className="py-3 px-2 border-x border-gray-300 w-12 text-xs">타수</th>
                 <th className="py-3 px-2 border-x border-gray-300 w-12 text-xs">안타</th>
@@ -408,7 +426,6 @@ export default function MatchRecord() {
                       </select>
                     </td>
 
-                    {/* 타석 입력칸 (타입 에러 수정) */}
                     {[0, 1, 2, 3, 4, 5, 6, 7, 8].map(inning => {
                       const isEditing = editingCell?.team === batTeam && editingCell?.bIdx === bIdx && editingCell?.inning === inning;
                       const rawValue = b.outcomes[inning] || '';
@@ -436,8 +453,42 @@ export default function MatchRecord() {
                         </td>
                       )
                     })}
-                    <td className="py-2 px-2 border-x border-gray-200"><input type="number" className={inputStyle} disabled={!isAdmin} value={b.rbi === 0 ? '' : b.rbi} onChange={e => { const newB = [...batters]; newB[bIdx].rbi = Number(e.target.value); setMatchData({...matchData, [`${batTeam}_batters`]: newB}); }}/></td>
-                    <td className="py-2 px-2 border-x border-gray-200"><input type="number" className={inputStyle} disabled={!isAdmin} value={b.runs === 0 ? '' : b.runs} onChange={e => { const newB = [...batters]; newB[bIdx].runs = Number(e.target.value); setMatchData({...matchData, [`${batTeam}_batters`]: newB}); }}/></td>
+
+                    <td className="py-2 px-2 border-x border-gray-200">
+                      <input 
+                        type="number" min="0" className={inputStyle} disabled={!isAdmin} 
+                        value={b.rbi} 
+                        onChange={e => { 
+                          const newB = [...batters]; 
+                          newB[bIdx].rbi = e.target.value === '' ? '' : Number(e.target.value); 
+                          setMatchData({...matchData, [`${batTeam}_batters`]: newB}); 
+                        }}
+                        onBlur={() => {
+                          if (b.rbi === '') {
+                            const newB = [...batters]; newB[bIdx].rbi = 0; setMatchData({...matchData, [`${batTeam}_batters`]: newB});
+                          }
+                        }}
+                        onKeyDown={handleNumberKeyDown}
+                      />
+                    </td>
+                    
+                    <td className="py-2 px-2 border-x border-gray-200">
+                      <input 
+                        type="number" min="0" className={inputStyle} disabled={!isAdmin} 
+                        value={b.runs} 
+                        onChange={e => { 
+                          const newB = [...batters]; 
+                          newB[bIdx].runs = e.target.value === '' ? '' : Number(e.target.value); 
+                          setMatchData({...matchData, [`${batTeam}_batters`]: newB}); 
+                        }}
+                        onBlur={() => {
+                          if (b.runs === '') {
+                            const newB = [...batters]; newB[bIdx].runs = 0; setMatchData({...matchData, [`${batTeam}_batters`]: newB});
+                          }
+                        }}
+                        onKeyDown={handleNumberKeyDown}
+                      />
+                    </td>
                     
                     <td className="py-2 px-2 border-x border-gray-200 font-bold bg-gray-50">{stats.pa}</td>
                     <td className="py-2 px-2 border-x border-gray-200 font-bold bg-gray-50">{stats.ab}</td>
@@ -506,12 +557,38 @@ export default function MatchRecord() {
                       {PITCH_OUTCOMES.map((r: string) => <option key={r} value={r}>{r}</option>)}
                     </select>
                   </td>
-                  {/* ⭐ Boolean 타입 할당 에러가 났던 곳 (as string | number 추가) */}
+                  
                   {['innings', 'pitchcount', 'ER', 'RA', 'K', 'Hits', 'HRA', 'BB'].map((stat: string) => (
                     <td key={stat} className="py-2 px-2 border-x border-gray-200">
-                      <input disabled={!isAdmin} type="number" step={stat === 'innings' ? "0.1" : "1"} className={inputStyle} value={p[stat as keyof typeof p] as string | number} onChange={e => {
-                        const newP = [...pitchers]; newP[pIdx][stat as 'innings'] = e.target.value; setMatchData({...matchData, [`${pitchTeam}_pitchers`]: newP});
-                      }} />
+                      <input 
+                        disabled={!isAdmin} type="number" min="0" step={stat === 'innings' ? "0.1" : "1"} 
+                        className={inputStyle} value={p[stat as keyof typeof p] as string | number} 
+                        onChange={e => {
+                          const newP = [...pitchers]; 
+                          let val: number | string = e.target.value;
+
+                          if (val !== '') {
+                            val = Number(val);
+                            
+                            if (stat === 'innings') {
+                              let intPart = Math.floor(val);
+                              let decPart = Math.round((val - intPart) * 10);
+
+                              if (decPart === 3) val = intPart + 1; 
+                              else if (decPart === 9) val = intPart + 0.2; 
+                            }
+                          }
+
+                          newP[pIdx][stat as 'innings'] = val as any; 
+                          setMatchData({...matchData, [`${pitchTeam}_pitchers`]: newP});
+                        }} 
+                        onBlur={() => {
+                          if (p[stat as keyof typeof p] === '') {
+                            const newP = [...pitchers]; newP[pIdx][stat as 'innings'] = 0 as any; setMatchData({...matchData, [`${pitchTeam}_pitchers`]: newP});
+                          }
+                        }}
+                        onKeyDown={handleNumberKeyDown}
+                      />
                     </td>
                   ))}
                 </tr>
@@ -536,7 +613,8 @@ export default function MatchRecord() {
         <div>
           <h2 className="text-gray-500 font-bold mb-2">경기 기록 상세</h2>
           <div className="flex items-end gap-4">
-            <h1 className="text-4xl font-black text-[#104175]">DUBI 리그 기록지</h1>
+            {/* ⭐ 페이지 상단 타이틀을 동적으로 변경 */}
+            <h1 className="text-4xl font-black text-[#104175]">{displayTitle}</h1>
             {isAdmin && <input type="date" value={matchData.match_date} onChange={e => setMatchData({...matchData, match_date: e.target.value})} className="border border-gray-300 p-2 rounded-lg font-bold" />}
           </div>
         </div>
@@ -571,9 +649,14 @@ export default function MatchRecord() {
                   </td>
                   {[0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => (
                     <td key={i} className="px-1 py-2 border-x border-gray-200">
-                      <input disabled={!isAdmin} type="number" className={inputStyle} value={scores[i]} onChange={e => {
-                        const newScores = [...scores]; newScores[i] = e.target.value; setMatchData({...matchData, [scoresKey]: newScores});
-                      }}/>
+                      <input 
+                        disabled={!isAdmin} type="number" min="0" className={inputStyle} value={scores[i]} 
+                        onChange={e => {
+                          const newScores = [...scores]; newScores[i] = e.target.value === '' ? '' : Number(e.target.value); 
+                          setMatchData({...matchData, [scoresKey]: newScores});
+                        }}
+                        onKeyDown={handleNumberKeyDown}
+                      />
                     </td>
                   ))}
                   <td className="py-3 px-2 border-x border-gray-200 text-red-700 font-black text-lg">{total}</td>
@@ -588,10 +671,10 @@ export default function MatchRecord() {
 
       <div className="flex gap-2 mb-6 border-b border-gray-200 pb-px mt-10">
         <button onClick={() => setInningTab('away')} className={`px-8 py-3 font-bold text-base rounded-t-xl transition-colors border border-b-0 ${inningTab === 'away' ? 'bg-[#104175] text-white border-[#104175]' : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200'}`}>
-          초공 : {allTeams.find(t => t.id === matchData.away_team_id)?.name || '팀미정'}
+          초공 : {awayTeamInfo?.name || '팀미정'}
         </button>
         <button onClick={() => setInningTab('home')} className={`px-8 py-3 font-bold text-base rounded-t-xl transition-colors border border-b-0 ${inningTab === 'home' ? 'bg-[#104175] text-white border-[#104175]' : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200'}`}>
-          말공 : {allTeams.find(t => t.id === matchData.home_team_id)?.name || '팀미정'}
+          말공 : {homeTeamInfo?.name || '팀미정'}
         </button>
       </div>
 
