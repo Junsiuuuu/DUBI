@@ -7,7 +7,10 @@ import PlayerStats from './pages/PlayerStats';
 import TeamStandings from './pages/TeamStandings'; 
 import Login from './pages/Login';                 
 import Signup from './pages/Signup'; 
-import Profile from './pages/Profile';
+import Profile from './pages/Profile'; 
+import ResetPassword from './pages/ResetPassword';   
+import UpdatePassword from './pages/UpdatePassword'; 
+import TeamPage from './pages/TeamPage';
 
 function App() {
   return (
@@ -21,7 +24,10 @@ function App() {
           <Route path="record/:id" element={<MatchRecord />} />   
           <Route path="login" element={<Login />} />              
           <Route path="signup" element={<Signup />} /> 
-          <Route path="profile" element={<Profile />} />
+          <Route path="profile" element={<Profile />} /> 
+          <Route path="reset-password" element={<ResetPassword />} /> 
+          <Route path="update-password" element={<UpdatePassword />} /> 
+          <Route path="team/:id" element={<TeamPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

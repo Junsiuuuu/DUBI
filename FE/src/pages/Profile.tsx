@@ -4,23 +4,48 @@ import { supabase } from '../lib/supabase';
 
 export default function Profile() {
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [role, setRole] = useState('user');
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [userId, setUserId] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    const getUser = async () => {
+    const fetchUserData = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         setEmail(session.user.email || '');
+        setUserId(session.user.id);
+        
+        // DB에서 최신 내 정보 가져오기
+        const { data } = await supabase.from('profiles').select('name, role').eq('id', session.user.id).single();
+        if (data) {
+          setName(data.name || session.user.email?.split('@')[0] || '');
+          setRole(data.role);
+        }
       } else {
-        navigate('/login'); // 로그인 안 되어있으면 튕겨냄
+        navigate('/login');
       }
     };
-    getUser();
+    fetchUserData();
   }, [navigate]);
+
+  // ⭐ 이름 수정(업데이트) 함수
+  const handleUpdateProfile = async () => {
+    setIsUpdating(true);
+    const { error } = await supabase.from('profiles').update({ name: name }).eq('id', userId);
+    setIsUpdating(false);
+
+    if (error) {
+      alert('프로필 수정 중 오류가 발생했습니다.');
+    } else {
+      alert('프로필이 성공적으로 수정되었습니다!');
+      window.location.reload(); // 헤더 이름 업데이트를 위해 강제 새로고침
+    }
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    alert('로그아웃 되었습니다.');
     navigate('/');
   };
 
@@ -31,13 +56,34 @@ export default function Profile() {
       <div className="space-y-6 mb-10">
         <div>
           <label className="block text-sm font-bold text-gray-500 mb-2">가입된 이메일</label>
-          <div className="text-lg font-bold text-gray-900">{email}</div>
+          <div className="text-lg font-bold text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100">{email}</div>
+        </div>
+
+        {/* 이름 수정 영역 */}
+        <div>
+          <label className="block text-sm font-bold text-gray-500 mb-2">이름 (닉네임)</label>
+          <div className="flex gap-2">
+            <input 
+              type="text" 
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#104175] font-bold"
+            />
+            <button 
+              onClick={handleUpdateProfile}
+              disabled={isUpdating}
+              className="px-6 py-3 bg-[#104175] text-white font-bold rounded-xl hover:bg-[#0c3158] transition-colors"
+            >
+              {isUpdating ? '저장 중...' : '변경 저장'}
+            </button>
+          </div>
         </div>
         
         <div>
           <label className="block text-sm font-bold text-gray-500 mb-2">권한 상태</label>
-          {/* 나중에 DB와 연동해서 '관리자', '심판' 등으로 바뀌게 됩니다 */}
-          <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm font-bold">일반 회원</span>
+          <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm font-bold">
+            {role === 'admin' ? '최고 관리자' : role === 'umpire' ? '심판/기록원' : '일반 회원'}
+          </span>
         </div>
       </div>
 

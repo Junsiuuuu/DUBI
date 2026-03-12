@@ -23,7 +23,7 @@ export default function Login() {
     }
   };
 
-  // ⭐ 구글 로그인 함수
+  // 구글 로그인 함수
   const handleGoogleLogin = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -39,7 +39,7 @@ export default function Login() {
       <div className="w-full max-w-md bg-white p-10 rounded-[32px] shadow-sm border border-gray-100">
         <div className="text-center mb-10">
           <h2 className="text-3xl font-black tracking-tight mb-2">로그인</h2>
-          <p className="text-gray-500 text-sm">DUBI 리그의 모든 기록을 확인해보세요.</p>
+          <p className="text-gray-500 text-sm">DUBI LEAGUE</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
@@ -60,7 +60,7 @@ export default function Login() {
           </button>
         </form>
 
-        {/* ⭐ 구글 로그인 버튼 (구분선 포함) */}
+        {/* 구글 로그인 버튼 (구분선 포함) */}
         <div className="mt-6 flex items-center justify-between">
           <span className="border-b border-gray-200 w-1/5 lg:w-1/4"></span>
           <span className="text-xs text-center text-gray-400 uppercase font-bold">또는</span>
@@ -74,8 +74,13 @@ export default function Login() {
           구글로 시작하기
         </button>
 
-        <div className="mt-8 text-center text-sm text-gray-500">
-          계정이 없으신가요? <Link to="/signup" className="text-black font-bold hover:underline">회원가입</Link>
+        <div className="mt-8 text-center text-sm text-gray-500 flex flex-col gap-3">
+          <span>
+            계정이 없으신가요? <Link to="/signup" className="text-black font-bold hover:underline">회원가입</Link>
+          </span>
+          <span>
+            비밀번호를 잊으셨나요? <Link to="/reset-password" className="text-black font-bold hover:underline">비밀번호 찾기</Link>
+          </span>
         </div>
       </div>
     </div>

@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase'; // ⭐ 방금 만든 다리를 가져옵니다!
+import { supabase } from '../lib/supabase';
 
 export default function Signup() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // 로딩 상태 추가
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -15,21 +15,22 @@ export default function Signup() {
     setIsLoading(true);
 
     try {
-      // 1. Supabase Auth에 회원가입 요청
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            full_name: name,
+          }
+        }
       });
-
       if (error) throw error;
 
-      // 2. profiles 테이블에 닉네임과 함께 저장
       if (data.user) {
+        // ⭐ 이메일뿐만 아니라 name: name 도 함께 저장하도록 추가되었습니다!
         const { error: profileError } = await supabase
           .from('profiles')
-          .insert([
-            { id: data.user.id, email: email, role: 'user' } // 기본 권한은 'user'
-          ]);
+          .insert([{ id: data.user.id, email: email, name: name, role: 'user' }]);
           
         if (profileError) throw profileError;
       }
@@ -49,60 +50,26 @@ export default function Signup() {
       <div className="w-full max-w-md bg-white p-10 rounded-[32px] shadow-sm border border-gray-100">
         <div className="text-center mb-10">
           <h2 className="text-3xl font-black tracking-tight mb-2">회원가입</h2>
-          <p className="text-gray-500 text-sm">DUBI 리그의 회원이 되어주세요.</p>
+          <p className="text-gray-500 text-sm">DUBI LEAGUE</p>
         </div>
 
         <form onSubmit={handleSignup} className="space-y-6">
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">이름 (닉네임)</label>
-            <input 
-              type="text" 
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-5 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black transition-all"
-              placeholder="홍길동"
-              required 
-            />
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full px-5 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black transition-all" placeholder="홍길동" required />
           </div>
-
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">이메일</label>
-            <input 
-              type="email" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-5 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black transition-all"
-              placeholder="example@email.com"
-              required 
-            />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-5 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black transition-all" placeholder="example@email.com" required />
           </div>
-          
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">비밀번호 (6자리 이상)</label>
             <div className="relative">
-              <input 
-                type={showPassword ? "text" : "password"} 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-5 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black transition-all"
-                placeholder="••••••••"
-                required 
-              />
-              <button 
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-sm font-bold text-gray-400 hover:text-black"
-              >
-                {showPassword ? '숨기기' : '보기'}
-              </button>
+              <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-5 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black transition-all" placeholder="••••••••" required />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-sm font-bold text-gray-400 hover:text-black">{showPassword ? '숨기기' : '보기'}</button>
             </div>
           </div>
-
-          <button 
-            type="submit" 
-            disabled={isLoading}
-            className="w-full py-4 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition-all mt-4 disabled:bg-gray-400"
-          >
+          <button type="submit" disabled={isLoading} className="w-full py-4 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition-all mt-4 disabled:bg-gray-400">
             {isLoading ? '가입 중...' : '가입하기'}
           </button>
         </form>

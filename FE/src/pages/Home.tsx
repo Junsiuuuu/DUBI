@@ -1,14 +1,11 @@
-import type { Match, TeamStanding, LeagueLeader } from '../types/baseball';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { supabase } from '../lib/supabase'; // ⭐ Supabase 추가
+import type { TeamStanding, LeagueLeader } from '../types/baseball';
 
-// --- 더미 데이터 (생략 없이 그대로 유지) ---
-const RECENT_MATCHES: Match[] = [
-  { id: '1', date: '2026-02-04', homeTeam: '23학번', awayTeam: '24학번', homeScore: 1, awayScore: 1, status: 'finished' },
-  { id: '2', date: '2026-01-27', homeTeam: '25학번', awayTeam: '22학번', homeScore: 5, awayScore: 6, status: 'finished' },
-  { id: '3', date: '2026-01-19', homeTeam: '22학번', awayTeam: '23학번', homeScore: 3, awayScore: 1, status: 'finished' },
-  { id: '4', date: '2026-01-06', homeTeam: '24학번', awayTeam: '25학번', homeScore: 5, awayScore: 2, status: 'finished' },
-  { id: '5', date: '2025-12-20', homeTeam: '25학번', awayTeam: '23학번', homeScore: 2, awayScore: 7, status: 'finished' },
-];
+// 🚨 RECENT_MATCHES 더미 데이터는 삭제했습니다! (DB에서 직접 가져옵니다)
 
+// 팀 순위와 리그 리더는 추후 DB 연결을 위해 일단 더미 데이터를 유지합니다.
 const STANDINGS: TeamStanding[] = [
   { rank: 1, teamName: '22학번', wins: 5, losses: 2, draws: 1, winRate: '0.625' },
   { rank: 2, teamName: '23학번', wins: 4, losses: 3, draws: 1, winRate: '0.500' },
@@ -24,6 +21,50 @@ const LEADERS: LeagueLeader[] = [
 ];
 
 export const Home = () => {
+  const [recentMatches, setRecentMatches] = useState<any[]>([]); // 최근 경기 목록
+  const [standings, setStandings] = useState<any[]>([]); // 순위 데이터 
+
+  // 최근 5 경기
+  useEffect(() => {
+    const fetchRecentMatches = async () => {
+      const { data } = await supabase
+        .from('matches')
+        .select(`
+          id, match_date, away_score, home_score, status, 
+          away_team:teams!matches_away_team_id_fkey(id, name), 
+          home_team:teams!matches_home_team_id_fkey(id, name)
+        `)
+        .order('match_date', { ascending: false })
+        .limit(5); 
+      if (data) setRecentMatches(data);
+    };
+    fetchRecentMatches();
+
+    const fetchStandings = async () => {
+      const { data: teamsData } = await supabase.from('teams').select('*');
+      const { data: matchesData } = await supabase.from('matches').select('*').eq('status', 'finished');
+
+      if (teamsData && matchesData) {
+        const stats = teamsData.map(team => {
+          let wins = 0, losses = 0, draws = 0;
+          matchesData.forEach(match => {
+            if (match.away_team_id === team.id || match.home_team_id === team.id) {
+              const myScore = match.away_team_id === team.id ? match.away_score : match.home_score;
+              const opScore = match.away_team_id === team.id ? match.home_score : match.away_score;
+              if (myScore > opScore) wins++; else if (myScore < opScore) losses++; else draws++;
+            }
+          });
+          const winRate = (wins + losses) > 0 ? (wins / (wins + losses)) : 0;
+          return { id: team.id, name: team.name, wins, losses, draws, winRateValue: winRate, winRate: winRate.toFixed(3) };
+        });
+
+        stats.sort((a, b) => b.winRateValue !== a.winRateValue ? b.winRateValue - a.winRateValue : b.wins - a.wins);
+        setStandings(stats.map((s, i) => ({ ...s, rank: i + 1 })).slice(0, 4)); // 홈 화면에는 상위 4팀만 표시!
+      }
+    };
+    fetchStandings();
+  }, []);
+
   return (
     <div className="max-w-7xl mx-auto px-8 py-12">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-16">
@@ -32,28 +73,46 @@ export const Home = () => {
         <section className="bg-white p-10 rounded-[32px] shadow-sm border border-gray-100">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-2xl font-bold tracking-tight">최근 경기</h2>
-            <button className="text-sm font-bold px-5 py-2 border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-600">더보기</button>
+            <Link to="/matches" className="text-sm font-bold px-5 py-2 border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-600">더보기</Link>
           </div>
+          
           <div className="space-y-4">
-            {RECENT_MATCHES.map((match) => (
-              <div key={match.id} className="flex justify-between items-center p-5 border border-gray-50 rounded-2xl hover:shadow-md hover:border-gray-200 transition-all group cursor-pointer">
-                <span className="text-gray-300 font-medium text-sm w-24">{match.date}</span>
+            {recentMatches.map((match) => (
+              <div key={match.id} className="flex justify-between items-center p-5 border border-gray-50 rounded-2xl hover:shadow-md hover:border-gray-200 transition-all group">
+                <span className="text-gray-300 font-medium text-sm w-24">{match.match_date}</span>
+                
                 <div className="flex-1 flex justify-center items-center gap-6 text-lg font-bold">
-                  <span className="w-20 text-right">{match.homeTeam}</span>
+                  {/* ⭐ 초공 팀 이름 누르면 해당 팀 페이지로 이동! */}
+                  <Link to={`/team/${match.away_team?.id}`} className="w-20 text-right hover:text-[#104175] hover:underline cursor-pointer">
+                    {match.away_team?.name}
+                  </Link>
+                  
                   <span className="text-gray-200 font-light text-xs italic">vs</span>
-                  <span className="w-20 text-left">{match.awayTeam}</span>
+                  
+                  {/* ⭐ 말공 팀 이름 누르면 해당 팀 페이지로 이동! */}
+                  <Link to={`/team/${match.home_team?.id}`} className="w-20 text-left hover:text-[#104175] hover:underline cursor-pointer">
+                    {match.home_team?.name}
+                  </Link>
                 </div>
-                <span className="font-black text-xl w-24 text-right tabular-nums">{match.homeScore} : {match.awayScore}</span>
+
+                <span className="font-black text-xl w-24 text-right tabular-nums">
+                  {match.status === 'finished' ? `${match.away_score} : ${match.home_score}` : '예정'}
+                </span>
               </div>
             ))}
+            
+            {/* DB에 데이터가 하나도 없을 때 보여줄 문구 */}
+            {recentMatches.length === 0 && (
+              <div className="text-center text-gray-400 py-8 text-sm">최근 경기 기록이 없습니다.</div>
+            )}
           </div>
         </section>
 
-        {/* 팀 순위 섹션 */}
+        {/* 팀 순위 섹션 (이하 기존 코드 동일) */}
         <section className="bg-white p-10 rounded-[32px] shadow-sm border border-gray-100">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-2xl font-bold tracking-tight">팀 순위</h2>
-            <button className="text-sm font-bold px-5 py-2 border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-600">더보기</button>
+            <Link to="/standings" className="text-sm font-bold px-5 py-2 border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-600">더보기</Link>
           </div>
           <table className="w-full">
             <thead className="text-gray-400 text-xs font-bold uppercase border-b border-gray-50">
@@ -67,10 +126,15 @@ export const Home = () => {
               </tr>
             </thead>
             <tbody className="text-[15px]">
-              {STANDINGS.map((row) => (
+              {standings.map((row) => (
                 <tr key={row.rank} className="border-b last:border-0 border-gray-50 hover:bg-gray-50/50 transition-colors">
                   <td className="py-5 font-black text-gray-400">{row.rank}</td>
-                  <td className="py-5 font-bold text-lg">{row.teamName}</td>
+                  <td className="py-5 font-bold text-lg">
+                    {/* 홈 화면에서도 팀 이름 누르면 넘어가게 처리 */}
+                    <Link to={`/team/${row.id}`} className="hover:text-[#104175] hover:underline transition-colors">
+                      {row.name}
+                    </Link>
+                  </td>
                   <td className="py-5 text-center font-medium">{row.wins}</td>
                   <td className="py-5 text-center font-medium">{row.losses}</td>
                   <td className="py-5 text-center font-medium">{row.draws}</td>
@@ -82,7 +146,7 @@ export const Home = () => {
         </section>
       </div>
 
-      {/* 리그 리더 섹션 */}
+      {/* 리그 리더 섹션 (이하 기존 코드 동일) */}
       <section>
         <h2 className="text-2xl font-bold mb-8 tracking-tight px-2">리그 리더</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
