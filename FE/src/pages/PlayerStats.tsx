@@ -230,7 +230,7 @@ export default function PlayerStats() {
           </button>
         </div>
         
-        {/* ⭐ 라디오 버튼 순서 변경: '전체 기록'이 먼저 오도록 배치 */}
+        {/* 라디오 버튼 순서 변경: '전체 기록'이 먼저 오도록 배치 */}
         <div className="text-sm text-gray-700 flex gap-4 font-bold bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-100">
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="radio" name="filter" value="all" checked={filterType === 'all'} onChange={() => setFilterType('all')} className="accent-[#104175]" /> 
@@ -275,7 +275,7 @@ export default function PlayerStats() {
                     <tr key={idx} className={`border-b border-gray-100 hover:bg-gray-100 transition-colors ${!r.isQualified && filterType === 'all' ? 'text-gray-400' : 'text-gray-800'}`}>
                       <td className="py-3 px-2 border-r border-gray-100">{r.teamName}</td>
                       <td className="py-3 px-2 border-r border-gray-100 font-bold hover:underline cursor-pointer text-[#104175]">
-                        {/* ⭐ 선수 ID가 정상적으로 있을 때만 링크를 달아줍니다 */}
+                        {/* 선수 ID가 정상적으로 있을 때만 링크를 달아줍니다 */}
                         {r.id ? <Link to={`/player/${r.id}`}>{r.name}</Link> : <span>{r.name}</span>}
                       </td>
                       <td className="py-3 px-2 border-r border-gray-100">{r.games}</td>
@@ -327,7 +327,7 @@ export default function PlayerStats() {
                     <tr key={idx} className={`border-b border-gray-100 hover:bg-gray-100 transition-colors ${!r.isQualified && filterType === 'all' ? 'text-gray-400' : 'text-gray-800'}`}>
                       <td className="py-3 px-2 border-r border-gray-100">{r.teamName}</td>
                       <td className="py-3 px-2 border-r border-gray-100 font-bold hover:underline cursor-pointer text-[#104175]">
-                        {/* ⭐ 선수 ID가 정상적으로 있을 때만 링크를 달아줍니다 */}
+                        {/* 선수 ID가 정상적으로 있을 때만 링크를 달아줍니다 */}
                         {r.id ? <Link to={`/player/${r.id}`}>{r.name}</Link> : <span>{r.name}</span>}
                       </td>
                       <td className="py-3 px-2 border-r border-gray-100">{r.games}</td>

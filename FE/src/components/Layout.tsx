@@ -4,7 +4,8 @@ import { supabase } from '../lib/supabase';
 
 export default function Layout() {
   const [session, setSession] = useState<any>(null);
-  const [userName, setUserName] = useState<string>('사용자'); // 헤더에 띄울 이름
+  const [userName, setUserName] = useState<string>('사용자'); 
+  const [teamLogo, setTeamLogo] = useState<string | null>(null); 
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -20,24 +21,35 @@ export default function Layout() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // ⭐ 유저 프로필 정보를 가져오고, 없으면 구글 정보로 자동 생성하는 함수
   const fetchAndSetProfile = async (user: any) => {
-    const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
-
-    // 구글 계정에 이름이 있으면 가져오고, 없으면 이메일 앞자리를 씁니다.
+    // 1. 프로필 및 이름 정보 세팅
+    const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
     const fallbackName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0];
 
-    if (!data) {
-      // DB에 프로필이 아예 없는 경우 (구글 최초 로그인) -> 자동 생성
+    let currentName = fallbackName;
+    if (!profile) {
       await supabase.from('profiles').insert([{ id: user.id, email: user.email, name: fallbackName, role: 'user' }]);
-      setUserName(fallbackName);
-    } else if (!data.name) {
-      // 프로필은 있는데 아까 만들어서 이름이 비어있는 경우 (기존 가입자) -> 이름 채워넣기
+    } else if (!profile.name) {
       await supabase.from('profiles').update({ name: fallbackName }).eq('id', user.id);
-      setUserName(fallbackName);
     } else {
-      // 정상적으로 이름이 있는 경우
-      setUserName(data.name);
+      currentName = profile.name;
+    }
+    setUserName(currentName);
+
+    // 2. 소속 팀 로고 가져오기 (players 연동 혹은 captain 관리팀 기준)
+    const { data: playerData } = await supabase
+      .from('players')
+      .select('team:teams(logo_url)')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (playerData?.team) {
+      // @ts-ignore
+      setTeamLogo(playerData.team.logo_url);
+    } else if (profile?.team_id) {
+      // 일반 선수가 아니라 팀장(Captain) 권한만 가지고 있는 경우
+      const { data: teamData } = await supabase.from('teams').select('logo_url').eq('id', profile.team_id).maybeSingle();
+      if (teamData?.logo_url) setTeamLogo(teamData.logo_url);
     }
   };
 
@@ -56,9 +68,14 @@ export default function Layout() {
           
           {session ? (
             <Link to="/profile" className="ml-4 flex items-center gap-2 px-4 py-2 bg-gray-50 text-black border border-gray-200 rounded-xl font-bold hover:bg-gray-100 transition-all">
-              <div className="w-7 h-7 bg-[#104175] text-white rounded-full flex items-center justify-center text-xs font-black uppercase">
-                {userName.charAt(0)}
-              </div>
+              {/* 로고가 있으면 사진을 띄우고, 없으면 기존처럼 첫 글자를 띄움 */}
+              {teamLogo ? (
+                <img src={teamLogo} alt="팀 로고" className="w-7 h-7 rounded-full object-cover border border-gray-200 bg-white" />
+              ) : (
+                <div className="w-7 h-7 bg-[#104175] text-white rounded-full flex items-center justify-center text-xs font-black uppercase">
+                  {userName.charAt(0)}
+                </div>
+              )}
               {userName} 님
             </Link>
           ) : (

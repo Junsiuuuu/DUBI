@@ -5,6 +5,9 @@ import { supabase } from '../lib/supabase';
 export default function TeamPage() {
   const { id } = useParams<{ id: string }>(); 
   const [teamName, setTeamName] = useState('로딩 중...');
+  const [logoUrl, setLogoUrl] = useState<string | null>(null); // 팀 로고 상태 추가
+  const [isUploading, setIsUploading] = useState(false); // 업로드 로딩 상태
+
   const [players, setPlayers] = useState<any[]>([]);
   const [matches, setMatches] = useState<any[]>([]);
   const [stats, setStats] = useState({ total: 0, win: 0, draw: 0, loss: 0, rate: '0.0' });
@@ -58,8 +61,12 @@ export default function TeamPage() {
 
   const fetchTeamData = async () => {
     if (!id) return;
-    const { data: teamData } = await supabase.from('teams').select('name').eq('id', id).single();
-    if (teamData) setTeamName(teamData.name);
+    // logo_url 도 함께 가져옵니다.
+    const { data: teamData } = await supabase.from('teams').select('name, logo_url').eq('id', id).single();
+    if (teamData) {
+      setTeamName(teamData.name);
+      setLogoUrl(teamData.logo_url);
+    }
 
     const { data: playersData } = await supabase
       .from('players')
@@ -94,13 +101,41 @@ export default function TeamPage() {
     setStats({ total, win, draw, loss, rate });
   };
 
-  // 팀 중복 방지
+  //  로고 업로드 함수
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    
+    // 파일명 생성 (팀ID + 현재시간)
+    const fileExt = file.name.split('.').pop();
+    const filePath = `team_${id}_${Date.now()}.${fileExt}`;
+
+    setIsUploading(true);
+    try {
+      // 1. Storage의 'logos' 버킷에 업로드
+      const { error: uploadError } = await supabase.storage.from('logos').upload(filePath, file);
+      if (uploadError) throw uploadError;
+
+      // 2. 업로드된 파일의 공개 URL 가져오기
+      const { data: { publicUrl } } = supabase.storage.from('logos').getPublicUrl(filePath);
+
+      // 3. teams 테이블의 logo_url 업데이트
+      const { error: updateError } = await supabase.from('teams').update({ logo_url: publicUrl }).eq('id', id);
+      if (updateError) throw updateError;
+
+      setLogoUrl(publicUrl);
+      alert("팀 로고가 성공적으로 변경되었습니다.");
+    } catch (error: any) {
+      alert("로고 업로드 실패: " + error.message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const submitPlayer = async (name: string, userId: string | null) => {
     if (!name.trim()) return alert("선수 이름을 입력하세요.");
     
-    // 회원 계정 연동
     if (userId) {
-      // players 테이블을 뒤져서 이 계정이 이미 다른 팀에 등록되어 있는지 확인합니다.
       const { data: existingPlayer } = await supabase
         .from('players')
         .select('team:teams(name)')
@@ -110,7 +145,7 @@ export default function TeamPage() {
       if (existingPlayer) {
         // @ts-ignore
         const currentTeam = existingPlayer.team?.name || '다른 팀';
-        return alert(`추가 실패!\n해당 회원은 이미 [${currentTeam}]에 소속되어 있습니다.`);
+        return alert(`❌ 추가 실패!\n해당 회원은 이미 [${currentTeam}]에 소속되어 있습니다.\n(1인 1팀 정책으로 인해 이중 소속이 불가능합니다)`);
       }
     }
 
@@ -136,9 +171,29 @@ export default function TeamPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4">
-      {/* 타이틀 및 통계 카드 */}
+      {/* 타이틀 및 로고 변경 영역 */}
+      <div className="flex items-center gap-5 mb-6 border-b-2 border-[#104175] pb-5">
+        {/*  로고 이미지 렌더링 */}
+        {logoUrl ? (
+          <img src={logoUrl} alt="팀 로고" className="w-16 h-16 rounded-full object-cover border border-gray-200 bg-white shadow-sm" />
+        ) : (
+          <div className="w-16 h-16 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400 text-sm font-bold shadow-sm">
+            NO LOGO
+          </div>
+        )}
+        
+        <h2 className="text-3xl font-black text-[#104175] m-0 leading-none">{teamName}</h2>
+
+        {/* 권한이 있는 사람만 로고 변경 버튼 표시 */}
+        {canEditPlayers && (
+          <label className="ml-auto cursor-pointer bg-[#f1f3f5] hover:bg-[#e9ecef] text-[#495057] px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm border border-gray-200">
+            {isUploading ? '업로드 중...' : '📷 로고 변경'}
+            <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} disabled={isUploading} />
+          </label>
+        )}
+      </div>
+
       <div className="mb-10">
-        <h2 className="text-3xl font-black text-[#104175] border-b-2 border-[#104175] pb-4 mb-6">{teamName}</h2>
         <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex justify-around text-center">
           <div className="flex flex-col gap-2"><span className="text-sm font-bold text-gray-500">총 경기</span><span className="text-3xl font-black text-[#104175]">{stats.total}</span></div>
           <div className="flex flex-col gap-2"><span className="text-sm font-bold text-gray-500">승</span><span className="text-3xl font-black text-[#2d6d3c]">{stats.win}</span></div>

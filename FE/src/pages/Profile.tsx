@@ -6,8 +6,8 @@ export default function Profile() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [teamName, setTeamName] = useState<string>('');
+  const [teamId, setTeamId] = useState<string | null>(null);
   
-  // 1팀 1선수 정책으로 복구
   const [linkedPlayer, setLinkedPlayer] = useState<{ id: string, name: string } | null>(null);
   
   const [isLoading, setIsLoading] = useState(true);
@@ -26,8 +26,8 @@ export default function Profile() {
     }
 
     let currentTeamName = '';
+    let currentTeamId = null;
 
-    // 1. 내 프로필 정보 가져오기
     const { data: profileData } = await supabase
       .from('profiles')
       .select('*')
@@ -39,15 +39,17 @@ export default function Profile() {
       setEditNameValue(profileData.name || '');
       
       if (profileData.team_id) {
-        const { data: teamData } = await supabase.from('teams').select('name').eq('id', profileData.team_id).single();
-        if (teamData) currentTeamName = teamData.name;
+        const { data: teamData } = await supabase.from('teams').select('id, name').eq('id', profileData.team_id).single();
+        if (teamData) {
+          currentTeamName = teamData.name;
+          currentTeamId = teamData.id;
+        }
       }
     }
 
-    // 2. 'players' 테이블에서 연동된 선수 1명만 딱 가져오기
     const { data: playerData } = await supabase
       .from('players')
-      .select('id, name, team:teams(name)') 
+      .select('id, name, team:teams(id, name)') 
       .eq('user_id', session.user.id)
       .maybeSingle();
 
@@ -56,10 +58,13 @@ export default function Profile() {
       if (!currentTeamName && playerData.team) {
         // @ts-ignore
         currentTeamName = playerData.team.name;
+        // @ts-ignore
+        currentTeamId = playerData.team.id;
       }
     }
 
     setTeamName(currentTeamName);
+    setTeamId(currentTeamId);
     setIsLoading(false);
   };
 
@@ -138,10 +143,17 @@ export default function Profile() {
 
         <div className="flex justify-between items-center border-b border-gray-50 pb-4">
           <span className="font-bold text-gray-500">소속 팀</span>
-          <span className="font-bold text-[#18361f]">{teamName || '팀 미배정'}</span>
+          <span className="font-bold text-[#18361f]">
+            {teamId ? (
+              <Link to={`/team/${teamId}`} className="hover:text-[#104175] hover:underline transition-colors">
+                {teamName}
+              </Link>
+            ) : (
+              teamName || '팀 미배정'
+            )}
+          </span>
         </div>
 
-        {/* 기존의 단일 선수 기록 페이지(PlayerPage)로 직행하는 버튼으로 원복 */}
         <div className="flex justify-between items-center border-b border-gray-50 pb-4">
           <span className="font-bold text-gray-500">내 기록</span>
           {linkedPlayer ? (

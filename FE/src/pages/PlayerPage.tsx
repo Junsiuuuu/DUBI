@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 export default function PlayerPage() {
@@ -7,15 +7,12 @@ export default function PlayerPage() {
   const [player, setPlayer] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 통합 기록 상태
   const [batStats, setBatStats] = useState<any>(null);
   const [pitchStats, setPitchStats] = useState<any>(null);
 
-  // 경기별 기록 배열
   const [allBattingRecords, setAllBattingRecords] = useState<any[]>([]);
   const [allPitchingRecords, setAllPitchingRecords] = useState<any[]>([]);
 
-  // 더보기 토글 상태
   const [showAllBatting, setShowAllBatting] = useState(false);
   const [showAllPitching, setShowAllPitching] = useState(false);
 
@@ -61,7 +58,7 @@ export default function PlayerPage() {
         const teamPitchers = isAway ? match.record_data?.away_pitchers : match.record_data?.home_pitchers;
         const gameTitle = `${match.away_team?.name} vs ${match.home_team?.name}`;
 
-        // 타자 기록 추출
+        // 타자 기록 계산
         const batter = (teamBatters || []).find((b: any) => b.name === playerData.name);
         if (batter) {
           let pa = 0, ab = 0, hits = 0, ob = 0, steals = 0, doubles = 0, triples = 0, hr = 0;
@@ -101,7 +98,7 @@ export default function PlayerPage() {
           bAcc.rbi += rbi; bAcc.runs += runs; bAcc.steals += steals; bAcc.ob += ob;
         }
 
-        // 투수 기록 추출
+        // 투수 기록 계산
         const pitcher = (teamPitchers || []).find((p: any) => p.name === playerData.name);
         if (pitcher) {
           const inn = Number(pitcher.innings) || 0;
@@ -148,7 +145,6 @@ export default function PlayerPage() {
   if (isLoading) return <div className="text-center py-20 text-gray-500 font-bold">기록을 불러오는 중입니다...</div>;
   if (!player) return <div className="text-center py-20 text-gray-500 font-bold">존재하지 않는 선수입니다.</div>;
 
-  // 공통 테이블 스타일 클래스
   const thClass = "border border-[#dee2e6] p-2.5 text-center text-sm bg-[#e9ecef] font-bold text-[#495057] whitespace-nowrap";
   const tdClass = "border border-[#dee2e6] p-2.5 text-center text-sm";
   const tableClass = "w-full border-collapse my-5 shadow-[0_2px_4px_rgba(0,0,0,0.1)] bg-white";
@@ -157,11 +153,16 @@ export default function PlayerPage() {
     <div className="max-w-[1200px] mx-auto bg-[#f8f9fa] min-h-screen pb-20 font-sans">
       
       <h1 className="text-[#104175] text-left mt-2 mb-5 font-bold text-3xl">
-        <span className="text-[#666] text-[0.8em] mr-2">[{player.team?.name}]</span> 
+        {player.team?.id ? (
+          <Link to={`/team/${player.team.id}`} className="text-[#666] text-[0.8em] mr-2 hover:text-[#104175] hover:underline transition-colors">
+            [{player.team.name}]
+          </Link>
+        ) : (
+          <span className="text-[#666] text-[0.8em] mr-2">[{player.team?.name}]</span>
+        )}
         {player.name} <span className="text-[0.9em] text-black">선수 기록</span>
       </h1>
 
-      {/* --- 통합 타자 성적 --- */}
       <div id="integratedBattingRecord">
         <h2 className="mt-[30px] text-[1.5em] text-[#343a40] font-bold mb-2">통합 타자 성적</h2>
         {allBattingRecords.length === 0 ? (
@@ -200,7 +201,6 @@ export default function PlayerPage() {
 
       <hr className="border-[#dee2e6] my-8" />
 
-      {/* --- 경기별 타자 성적 --- */}
       <div id="gameBattingRecord">
         <h2 className="mt-[30px] text-[1.5em] text-[#343a40] font-bold mb-2">경기별 타자 성적</h2>
         {allBattingRecords.length === 0 ? (
@@ -247,7 +247,6 @@ export default function PlayerPage() {
 
       <hr className="border-[#dee2e6] my-8" />
 
-      {/* --- 통합 투수 성적 --- */}
       <div id="integratedPitchingRecord">
         <h2 className="mt-[30px] text-[1.5em] text-[#343a40] font-bold mb-2">통합 투수 성적</h2>
         {allPitchingRecords.length === 0 ? (
@@ -284,7 +283,6 @@ export default function PlayerPage() {
 
       <hr className="border-[#dee2e6] my-8" />
 
-      {/* --- 경기별 투수 성적 --- */}
       <div id="gamePitchingRecord">
         <h2 className="mt-[30px] text-[1.5em] text-[#343a40] font-bold mb-2">경기별 투수 성적</h2>
         {allPitchingRecords.length === 0 ? (
