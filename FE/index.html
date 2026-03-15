@@ -7,6 +7,12 @@
 
     <title>DUBI</title>
 
+    <script>
+      var userAgent = navigator.userAgent.toLowerCase();
+      if (userAgent.indexOf("kakaotalk") > -1) {
+        location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(location.href);
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
