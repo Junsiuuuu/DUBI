@@ -161,6 +161,33 @@ function getContrastColor(hexcolor: string) {
   return (((r * 299) + (g * 587) + (b * 114)) / 1000 >= 128) ? '#000000' : '#ffffff';
 }
 
+// --- [로직] H, B, E 자동 계산 함수 ---
+const calculateHBEStats = (batters: any[]) => {
+  let hits = 0;
+  let onBase = 0;
+  let errors = 0;
+
+  batters.forEach(b => {
+    (b.outcomes || []).forEach((inningStr: string) => {
+      if (!inningStr) return;
+      const codes = inningStr.split(',').map((c: string) => c.trim()).filter(Boolean);
+      codes.forEach((code: string) => {
+        // 안타: 끝자리가 1, 2, 3, 4
+        const m = code.match(/(\d+)$/) || code.match(/^(\d+)/);
+        if (m) {
+          const d = parseInt(m[1].slice(-1));
+          if ([1, 2, 3, 4].includes(d)) hits++;
+          if ([1, 2, 3, 4, 7].includes(d)) onBase++;
+          // 실책: E 이거나 09 이거나 끝자리가 5
+          if (code === 'E' || code === '09' || d === 5) errors++;
+        }
+      });
+    });
+  });
+
+  return { h: hits, b: onBase - hits, e: errors };
+};
+
 const calcBatStats = (outcomes: string[]) => {
   let pa = 0, ab = 0, hits = 0, ob = 0, steals = 0;
   outcomes.forEach(inningStr => {
