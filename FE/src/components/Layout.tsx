@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, Outlet } from 'react-router-dom';
-import { supabase } from './lib/supabase'; // 경로는 프로젝트에 맞게 확인해주세요!
+import { supabase } from '../lib/supabase'; // 경로는 프로젝트에 맞게 확인해주세요!
 
 export default function Layout() {
   const [session, setSession] = useState<any>(null);
