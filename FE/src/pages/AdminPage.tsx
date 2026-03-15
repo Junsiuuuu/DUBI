@@ -64,7 +64,7 @@ export default function AdminPage() {
     }
   };
 
-  // ⭐ 팀 삭제 함수 추가
+  // 팀 삭제 함수
   const handleDeleteTeam = async (teamId: string, teamName: string) => {
     if (!window.confirm(`정말로 '${teamName}' 팀을 삭제하시겠습니까?\n\n※ 주의: 해당 팀에 소속된 유저, 선수, 또는 경기 기록이 남아있다면 삭제가 취소될 수 있습니다.`)) {
       return;
@@ -145,7 +145,7 @@ export default function AdminPage() {
         <div className="flex flex-wrap gap-2 items-center">
           <span className="text-sm font-bold text-gray-500 py-1 mr-2">현재 등록된 팀:</span>
           {teams.map(t => (
-            // ⭐ 팀 이름과 삭제 버튼(X)을 함께 묶은 UI
+            // 팀 이름과 삭제 버튼(X)을 함께 묶은 UI
             <div key={t.id} className="group flex items-center bg-white border border-gray-300 text-gray-700 pl-3 pr-1 py-1 rounded-full text-sm font-bold shadow-sm">
               <span>{t.name}</span>
               <button 

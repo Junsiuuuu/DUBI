@@ -34,7 +34,7 @@ export default function MatchList() {
     if (data) setMatches(data);
   };
 
-  // ⭐ 관리자(admin) 이거나 심판(umpire)일 때만 true가 됩니다.
+  // 관리자(admin) 이거나 심판(umpire)일 때만 true
   const canAddMatch = userRole === 'admin' || userRole === 'umpire';
 
   return (
@@ -65,7 +65,7 @@ export default function MatchList() {
             <tr key={match.id} className="border-b border-[#eee] hover:bg-gray-50 transition-colors">
               <td className="py-4 text-gray-500">{match.match_date}</td>
               <td className="py-4 font-bold text-lg">
-                {/* ⭐ 팀 이름을 누르면 팀 상세 페이지로 이동하도록 Link 적용 */}
+                {/* 팀 이름을 누르면 팀 상세 페이지로 이동하도록 Link 적용 */}
                 <Link to={`/team/${match.away_team?.id}`} className="hover:text-[#104175] hover:underline transition-colors">
                   {match.away_team?.name}
                 </Link>
@@ -74,7 +74,7 @@ export default function MatchList() {
                 {match.status === 'finished' ? `${match.away_score} : ${match.home_score}` : '예정'}
               </td>
               <td className="py-4 font-bold text-lg">
-                {/* ⭐ 팀 이름을 누르면 팀 상세 페이지로 이동하도록 Link 적용 */}
+                {/* 팀 이름을 누르면 팀 상세 페이지로 이동하도록 Link 적용 */}
                 <Link to={`/team/${match.home_team?.id}`} className="hover:text-[#104175] hover:underline transition-colors">
                   {match.home_team?.name}
                 </Link>

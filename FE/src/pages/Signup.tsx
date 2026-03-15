@@ -27,7 +27,6 @@ export default function Signup() {
       if (error) throw error;
 
       if (data.user) {
-        // ⭐ 이메일뿐만 아니라 name: name 도 함께 저장하도록 추가되었습니다!
         const { error: profileError } = await supabase
           .from('profiles')
           .insert([{ id: data.user.id, email: email, name: name, role: 'user' }]);

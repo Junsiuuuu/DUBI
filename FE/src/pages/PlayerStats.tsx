@@ -6,7 +6,7 @@ export default function PlayerStats() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'batter' | 'pitcher'>('batter');
   
-  // ⭐ 기본값을 'all'(전체 기록)로 설정
+  // 기본값을 'all'(전체 기록)로 설정
   const [filterType, setFilterType] = useState<'qualified' | 'all'>('all');
   
   const [allTeams, setAllTeams] = useState<any[]>([]);
@@ -26,7 +26,7 @@ export default function PlayerStats() {
   const fetchAndProcessStats = async () => {
     setIsLoading(true);
     
-    // ⭐ 팀 목록, 경기 목록뿐만 아니라 'players' 테이블도 가져와서 ID를 매칭합니다.
+    // 팀 목록, 경기 목록뿐만 아니라 'players' 테이블도 가져와서 ID를 매칭
     const { data: teamsData } = await supabase.from('teams').select('*');
     const { data: playersData } = await supabase.from('players').select('*');
     const { data: matchesData } = await supabase.from('matches').select('away_team_id, home_team_id, record_data').eq('status', 'finished');
@@ -42,7 +42,7 @@ export default function PlayerStats() {
     const bMap: Record<string, any> = {};
     const pMap: Record<string, any> = {};
 
-    // ⭐ 선수 ID를 미리 세팅해 둡니다 (이름에 공백이 있어도 매칭되도록 trim 처리)
+    // 선수 ID를 미리 세팅
     playersData.forEach(p => {
       const tName = teamsData.find(t => t.id === p.team_id)?.name || 'Unknown';
       const key = `${p.name.trim()}_${tName}`;

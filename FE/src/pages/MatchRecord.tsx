@@ -12,12 +12,15 @@ const COLORS = {
 };
 
 const OUTCOME_CODES = [
+  // --- 아웃 ---
   { code: "10", text: "삼진", color: COLORS.OUT, category: "아웃" },
   { code: "20", text: "낫아웃", color: COLORS.OUT, category: "아웃" },
   { code: "30", text: "쓰리번트", color: COLORS.OUT, category: "아웃" },
   { code: "40", text: "타자타구", color: COLORS.OUT, category: "아웃" },
   { code: "50", text: "수비방해", color: COLORS.OUT, category: "아웃" },
   { code: "60", text: "부정타격", color: COLORS.OUT, category: "아웃" },
+
+  // --- 땅볼 ---
   { code: "110", text: "투땅", color: COLORS.GROUNDBALL, category: "땅볼" },
   { code: "210", text: "포땅", color: COLORS.GROUNDBALL, category: "땅볼" },
   { code: "310", text: "1땅", color: COLORS.GROUNDBALL, category: "땅볼" },
@@ -27,18 +30,29 @@ const OUTCOME_CODES = [
   { code: "710", text: "좌땅", color: COLORS.GROUNDBALL, category: "땅볼" },
   { code: "810", text: "중땅", color: COLORS.GROUNDBALL, category: "땅볼" },
   { code: "910", text: "우땅", color: COLORS.GROUNDBALL, category: "땅볼" },
+
+  // --- 병살 ---
   { code: "1100", text: "투땅병살", color: COLORS.DOUBLEPLAY, category: "병살" },
   { code: "2100", text: "포땅병살", color: COLORS.DOUBLEPLAY, category: "병살" },
   { code: "3100", text: "1땅병살", color: COLORS.DOUBLEPLAY, category: "병살" },
   { code: "4100", text: "2땅병살", color: COLORS.DOUBLEPLAY, category: "병살" },
   { code: "5100", text: "3땅병살", color: COLORS.DOUBLEPLAY, category: "병살" },
   { code: "6100", text: "유땅병살", color: COLORS.DOUBLEPLAY, category: "병살" },
+  { code: "1200", text: "투직병살", color: COLORS.DOUBLEPLAY, category: "병살" },
+  { code: "3200", text: "1직병살", color: COLORS.DOUBLEPLAY, category: "병살" },
+  { code: "4200", text: "2직병살", color: COLORS.DOUBLEPLAY, category: "병살" },
+  { code: "5200", text: "3직병살", color: COLORS.DOUBLEPLAY, category: "병살" },
+  { code: "6200", text: "유직병살", color: COLORS.DOUBLEPLAY, category: "병살" },
   { code: "000", text: "삼중살", color: COLORS.TRIPLEPLAY, category: "병살" },
+
+  // --- 직선타 ---
   { code: "120", text: "투직", color: COLORS.LINAR, category: "직선타" },
   { code: "320", text: "1직", color: COLORS.LINAR, category: "직선타" },
   { code: "420", text: "2직", color: COLORS.LINAR, category: "직선타" },
   { code: "520", text: "3직", color: COLORS.LINAR, category: "직선타" },
   { code: "620", text: "유직", color: COLORS.LINAR, category: "직선타" },
+
+  // --- 뜬공 ---
   { code: "130", text: "투뜬", color: COLORS.FLYBALL, category: "뜬공" },
   { code: "230", text: "포뜬", color: COLORS.FLYBALL, category: "뜬공" },
   { code: "330", text: "1뜬", color: COLORS.FLYBALL, category: "뜬공" },
@@ -48,6 +62,8 @@ const OUTCOME_CODES = [
   { code: "730", text: "좌뜬", color: COLORS.FLYBALL, category: "뜬공" },
   { code: "830", text: "중뜬", color: COLORS.FLYBALL, category: "뜬공" },
   { code: "930", text: "우뜬", color: COLORS.FLYBALL, category: "뜬공" },
+
+  // --- 희생타 ---
   { code: "338", text: "1희플", color: COLORS.SACRIFICE, category: "희생타" },
   { code: "438", text: "2희플", color: COLORS.SACRIFICE, category: "희생타" },
   { code: "538", text: "3희플", color: COLORS.SACRIFICE, category: "희생타" },
@@ -57,6 +73,12 @@ const OUTCOME_CODES = [
   { code: "938", text: "우희플", color: COLORS.SACRIFICE, category: "희생타" },
   { code: "118B", text: "투희번", color: COLORS.SACRIFICE, category: "희생타" },
   { code: "218B", text: "포희번", color: COLORS.SACRIFICE, category: "희생타" },
+  { code: "318B", text: "1희번", color: COLORS.SACRIFICE, category: "희생타" },
+  { code: "418B", text: "2희번", color: COLORS.SACRIFICE, category: "희생타" },
+  { code: "518B", text: "3희번", color: COLORS.SACRIFICE, category: "희생타" },
+  { code: "618B", text: "유희번", color: COLORS.SACRIFICE, category: "희생타" },
+
+  // --- 1루타 ---
   { code: "151", text: "투안", color: COLORS.HIT_1B, category: "1루타" },
   { code: "251", text: "포안", color: COLORS.HIT_1B, category: "1루타" },
   { code: "351", text: "1내안", color: COLORS.HIT_1B, category: "1루타" },
@@ -64,38 +86,84 @@ const OUTCOME_CODES = [
   { code: "551", text: "3내안", color: COLORS.HIT_1B, category: "1루타" },
   { code: "651", text: "유내안", color: COLORS.HIT_1B, category: "1루타" },
   { code: "751", text: "좌안", color: COLORS.HIT_1B, category: "1루타" },
+  { code: "871", text: "좌중안", color: COLORS.HIT_1B, category: "1루타" },
   { code: "851", text: "중안", color: COLORS.HIT_1B, category: "1루타" },
+  { code: "891", text: "우중안", color: COLORS.HIT_1B, category: "1루타" },
   { code: "951", text: "우안", color: COLORS.HIT_1B, category: "1루타" },
+
+  // --- 2루타 ---
   { code: "772", text: "좌선2", color: COLORS.HIT_2B, category: "2루타" },
   { code: "722", text: "좌전2", color: COLORS.HIT_2B, category: "2루타" },
+  { code: "782", text: "좌월2", color: COLORS.HIT_2B, category: "2루타" },
+  { code: "872", text: "좌중2", color: COLORS.HIT_2B, category: "2루타" },
   { code: "822", text: "중전2", color: COLORS.HIT_2B, category: "2루타" },
+  { code: "882", text: "중월2", color: COLORS.HIT_2B, category: "2루타" },
+  { code: "892", text: "우중2", color: COLORS.HIT_2B, category: "2루타" },
   { code: "922", text: "우전2", color: COLORS.HIT_2B, category: "2루타" },
+  { code: "982", text: "우월2", color: COLORS.HIT_2B, category: "2루타" },
+  { code: "992", text: "우선2", color: COLORS.HIT_2B, category: "2루타" },
+
+  // --- 3루타 ---
   { code: "773", text: "좌선3", color: COLORS.HIT_3B, category: "3루타" },
+  { code: "723", text: "좌전3", color: COLORS.HIT_3B, category: "3루타" },
+  { code: "783", text: "좌월3", color: COLORS.HIT_3B, category: "3루타" },
+  { code: "873", text: "좌중3", color: COLORS.HIT_3B, category: "3루타" },
   { code: "823", text: "중전3", color: COLORS.HIT_3B, category: "3루타" },
+  { code: "883", text: "중월3", color: COLORS.HIT_3B, category: "3루타" },
+  { code: "893", text: "우중3", color: COLORS.HIT_3B, category: "3루타" },
   { code: "923", text: "우전3", color: COLORS.HIT_3B, category: "3루타" },
+  { code: "983", text: "중월3", color: COLORS.HIT_3B, category: "3루타" },
+  { code: "993", text: "우선3", color: COLORS.HIT_3B, category: "3루타" },
+
+  // --- 홈런 ---
+  { code: "774", text: "좌선홈런", color: COLORS.HOMERUN, category: "홈런" },
   { code: "784", text: "좌월홈런", color: COLORS.HOMERUN, category: "홈런" },
+  { code: "874", text: "좌중홈런", color: COLORS.HOMERUN, category: "홈런" },
   { code: "884", text: "중월홈런", color: COLORS.HOMERUN, category: "홈런" },
+  { code: "894", text: "우중홈런", color: COLORS.HOMERUN, category: "홈런" },
   { code: "984", text: "우월홈런", color: COLORS.HOMERUN, category: "홈런" },
+  { code: "994", text: "우선홈런", color: COLORS.HOMERUN, category: "홈런" },
+  { code: "4G", text: "G홈런", color: COLORS.HOMERUN, category: "홈런" },
+
+  // --- 실책 ---
   { code: "115", text: "투실", color: COLORS.ERROR, category: "실책" },
   { code: "215", text: "포실", color: COLORS.ERROR, category: "실책" },
   { code: "315", text: "1실", color: COLORS.ERROR, category: "실책" },
   { code: "415", text: "2실", color: COLORS.ERROR, category: "실책" },
   { code: "515", text: "3실", color: COLORS.ERROR, category: "실책" },
   { code: "615", text: "유실", color: COLORS.ERROR, category: "실책" },
+  { code: "715", text: "좌실", color: COLORS.ERROR, category: "실책" },
+  { code: "815", text: "중실", color: COLORS.ERROR, category: "실책" },
+  { code: "915", text: "우실", color: COLORS.ERROR, category: "실책" },
+
+  // --- 야수선택 ---
   { code: "156", text: "투야선", color: COLORS.FIELDER_CHOICE, category: "야수선택" },
   { code: "256", text: "포야선", color: COLORS.FIELDER_CHOICE, category: "야수선택" },
+  { code: "356", text: "1야선", color: COLORS.FIELDER_CHOICE, category: "야수선택" },
+  { code: "456", text: "2야선", color: COLORS.FIELDER_CHOICE, category: "야수선택" },
+  { code: "556", text: "3야선", color: COLORS.FIELDER_CHOICE, category: "야수선택" },
+  { code: "656", text: "유야선", color: COLORS.FIELDER_CHOICE, category: "야수선택" },
+
+  // --- 출루 ---
   { code: "17", text: "볼넷", color: COLORS.ONBASE, category: "출루" },
   { code: "27", text: "사구", color: COLORS.ONBASE, category: "출루" },
   { code: "37", text: "고의4구", color: COLORS.ONBASE, category: "출루" },
-  { code: "09", text: "낫아웃+", color: COLORS.ONBASE, category: "출루" },
+  { code: "47", text: "타격방해", color: COLORS.ONBASE, category: "출루" },
+  
+  // --- 기타 ---
+  { code: "09", text: "낫아웃+", color: COLORS.OTHER, category: "출루" },
   { code: "S", text: "도루", color: COLORS.OTHER3, category: "기타" },
   { code: "E", text: "실책진루", color: COLORS.OTHER3, category: "기타" },
+  { code: "E+", text: "(실책진루)", color: COLORS.OTHER, category: "기타" },
+  { code: "BK", text: "보크", color: COLORS.OTHER3, category: "기타" },
   { code: "WP", text: "폭투", color: COLORS.OTHER3, category: "기타" },
   { code: "PB", text: "포일", color: COLORS.OTHER3, category: "기타" },
   { code: "CS", text: "도루자", color: COLORS.OTHER1, category: "기타" },
   { code: "RO", text: "주루사", color: COLORS.OTHER1, category: "기타" },
+  { code: "PO", text: "견제사", color: COLORS.OTHER1, category: "기타" },
   { code: "PH", text: "대타", color: COLORS.OTHER2, category: "기타" },
-  { code: "PR", text: "대주자", color: COLORS.OTHER2, category: "기타" }
+  { code: "PR", text: "대주자", color: COLORS.OTHER2, category: "기타" },
+  { code: "P", text: "대수비", color: COLORS.OTHER2, category: "기타" }
 ];
 
 const CATEGORIES = ["아웃", "땅볼", "병살", "직선타", "뜬공", "희생타", "1루타", "2루타", "3루타", "홈런", "실책", "야수선택", "출루", "기타"];
@@ -280,13 +348,13 @@ export default function MatchRecord() {
 
     try {
       if (id === 'new') {
-        // ⭐ 새 경기일 경우 생성 후 해당 경기의 고유 주소로 이동시킴 (목록으로 튕기지 않음)
+        // 새 경기일 경우 생성 후 해당 경기의 고유 주소로 이동시킴 (목록으로 튕기지 않음)
         const { data, error } = await supabase.from('matches').insert([saveData]).select('id').single();
         if (error) throw error;
         alert('기록이 성공적으로 저장되었습니다!');
         navigate(`/record/${data.id}`, { replace: true }); 
       } else {
-        // ⭐ 기존 경기일 경우 덮어쓰고 새로고침 (목록으로 튕기지 않음)
+        // 기존 경기일 경우 덮어쓰고 새로고침 (목록으로 튕기지 않음)
         const { error } = await supabase.from('matches').update(saveData).eq('id', id);
         if (error) throw error;
         alert('기록이 성공적으로 저장되었습니다!');
@@ -350,11 +418,11 @@ export default function MatchRecord() {
     setMatchData({ ...matchData, [`${team}_batters`]: batters });
   };
 
-  // ⭐ 현재 선택된 팀 정보 추출
+  // 현재 선택된 팀 정보 추출
   const awayTeamInfo = allTeams.find(t => t.id === matchData.away_team_id);
   const homeTeamInfo = allTeams.find(t => t.id === matchData.home_team_id);
 
-  // ⭐ 상단 타이틀을 동적으로 표시하기 위한 로직
+  // 상단 타이틀을 동적으로 표시하기 위한 로직
   const displayTitle = (matchData.away_team_id && matchData.home_team_id) 
     ? `${awayTeamInfo?.name || '알수없음'} vs ${homeTeamInfo?.name || '알수없음'}` 
     : '새 경기 기록 (팀 선택)';
@@ -613,7 +681,7 @@ export default function MatchRecord() {
         <div>
           <h2 className="text-gray-500 font-bold mb-2">경기 기록 상세</h2>
           <div className="flex items-end gap-4">
-            {/* ⭐ 페이지 상단 타이틀을 동적으로 변경 */}
+            {/* 페이지 상단 타이틀을 동적으로 변경 */}
             <h1 className="text-4xl font-black text-[#104175]">{displayTitle}</h1>
             {isAdmin && <input type="date" value={matchData.match_date} onChange={e => setMatchData({...matchData, match_date: e.target.value})} className="border border-gray-300 p-2 rounded-lg font-bold" />}
           </div>

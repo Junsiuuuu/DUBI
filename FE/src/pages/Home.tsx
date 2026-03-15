@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 export const Home = () => {
-  const navigate = useNavigate(); // ⭐ 경기 박스 클릭 시 이동을 위한 훅
+  const navigate = useNavigate(); // 경기 박스 클릭 시 이동을 위한 훅
   
   const [recentMatches, setRecentMatches] = useState<any[]>([]);
   const [standings, setStandings] = useState<any[]>([]);
-  const [leaders, setLeaders] = useState<any[]>([]); // ⭐ 리그 리더 상태 추가
+  const [leaders, setLeaders] = useState<any[]>([]); // 리그 리더 상태 추가
 
   useEffect(() => {
     // 1. 최근 경기 가져오기
@@ -173,7 +173,7 @@ export const Home = () => {
             {recentMatches.map((match) => (
               <div 
                 key={match.id} 
-                onClick={() => navigate(`/record/${match.id}`)} // ⭐ 경기 칸 전체를 누르면 이동!
+                onClick={() => navigate(`/record/${match.id}`)} // 경기 칸 전체를 누르면 이동!
                 className="flex justify-between items-center p-5 border border-gray-50 rounded-2xl hover:shadow-md hover:border-[#104175] transition-all group cursor-pointer"
               >
                 <span className="text-gray-400 font-medium text-sm w-24">{match.match_date}</span>
@@ -181,7 +181,7 @@ export const Home = () => {
                 <div className="flex-1 flex justify-center items-center gap-6 text-lg font-bold text-gray-800 group-hover:text-black transition-colors">
                   <Link 
                     to={`/team/${match.away_team?.id}`} 
-                    onClick={(e) => e.stopPropagation()} // ⭐ 팀 이름 누를 때는 팀 페이지로만 이동!
+                    onClick={(e) => e.stopPropagation()} // 팀 이름 누를 때는 팀 페이지로만 이동!
                     className="w-20 text-right hover:text-[#104175] hover:underline"
                   >
                     {match.away_team?.name}
@@ -253,16 +253,16 @@ export const Home = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {leaders.map((leader, i) => (
             <div key={i} className="bg-white p-8 rounded-[24px] shadow-sm border border-gray-100 hover:translate-y-[-4px] hover:shadow-md transition-all duration-300 flex flex-col justify-between">
-              {/* ⭐ 제목 크기 증가 및 밸런스 조정 */}
+              {/* 제목 크기 증가 및 밸런스 조정 */}
               <div className="text-sm font-bold text-gray-500 mb-5">{leader.category}</div>
               
               <div>
-                {/* ⭐ 수치 표시 최적화 */}
+                {/* 수치 표시 최적화 */}
                 <div className="text-4xl font-black tracking-tighter text-[#104175] mb-2 tabular-nums leading-none">
                   {leader.value}
                 </div>
                 
-                {/* ⭐ 이름 및 소속 팀 표시 최적화 (선수 개인 페이지로 이동 링크 포함) */}
+                {/* 이름 및 소속 팀 표시 최적화 (선수 개인 페이지로 이동 링크 포함) */}
                 <div className="text-[16px] text-gray-800 font-bold mt-4 flex items-center gap-1.5">
                   {leader.playerId ? (
                     <Link to={`/player/${leader.playerId}`} className="hover:text-[#104175] hover:underline transition-colors">

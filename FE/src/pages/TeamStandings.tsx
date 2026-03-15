@@ -98,7 +98,7 @@ export default function TeamStandings() {
                   <tr key={team.id} className="border-b border-[#eee] hover:bg-gray-50 transition-colors">
                     <td className="py-4 font-black text-gray-500">{team.rank}</td>
                     <td className="py-4 text-left px-4 font-bold text-lg">
-                      {/* ⭐ 팀 이름을 누르면 해당 팀 페이지로 쏙 넘어갑니다! */}
+                      {/* 팀 이름을 누르면 해당 팀 페이지로 쏙 넘어갑니다! */}
                       <Link to={`/team/${team.id}`} className="hover:text-[#104175] hover:underline transition-colors">
                         {team.name}
                       </Link>

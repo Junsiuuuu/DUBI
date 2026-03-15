@@ -94,11 +94,11 @@ export default function TeamPage() {
     setStats({ total, win, draw, loss, rate });
   };
 
-  // ⭐ 선수 추가 시 투잡 방지 로직 추가
+  // 팀 중복 방지
   const submitPlayer = async (name: string, userId: string | null) => {
     if (!name.trim()) return alert("선수 이름을 입력하세요.");
     
-    // 만약 회원 계정을 연동하려고 한다면?
+    // 회원 계정 연동
     if (userId) {
       // players 테이블을 뒤져서 이 계정이 이미 다른 팀에 등록되어 있는지 확인합니다.
       const { data: existingPlayer } = await supabase

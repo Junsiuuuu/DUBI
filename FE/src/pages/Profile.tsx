@@ -44,7 +44,7 @@ export default function Profile() {
       }
     }
 
-    // ⭐ 2. 'players' 테이블에서 연동된 선수 1명만 딱 가져오기
+    // 2. 'players' 테이블에서 연동된 선수 1명만 딱 가져오기
     const { data: playerData } = await supabase
       .from('players')
       .select('id, name, team:teams(name)') 
@@ -141,7 +141,7 @@ export default function Profile() {
           <span className="font-bold text-[#18361f]">{teamName || '팀 미배정'}</span>
         </div>
 
-        {/* ⭐ 기존의 단일 선수 기록 페이지(PlayerPage)로 직행하는 버튼으로 원복 */}
+        {/* 기존의 단일 선수 기록 페이지(PlayerPage)로 직행하는 버튼으로 원복 */}
         <div className="flex justify-between items-center border-b border-gray-50 pb-4">
           <span className="font-bold text-gray-500">내 기록</span>
           {linkedPlayer ? (
@@ -149,7 +149,7 @@ export default function Profile() {
               to={`/player/${linkedPlayer.id}`} 
               className="font-bold text-[#104175] bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-[#104175] hover:text-white transition-colors flex items-center gap-1"
             >
-              📊 {linkedPlayer.name} 기록 보기
+              📊 내 기록 보기
             </Link>
           ) : (
             <span className="text-sm font-medium text-gray-400 bg-gray-50 px-3 py-1.5 rounded-lg">연동된 선수 정보 없음</span>
